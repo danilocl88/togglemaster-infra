@@ -1,0 +1,17 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+*.tfvars
+!*.tfvars.example
+terraform-plan.txt
+terraform-outputs-publicos.json
+destroy-plan-*.txt
+.DS_Store
+tfplan
+
+# Evidencias e planos gerados localmente
+evidence/
+infra/terraform-plan.txt

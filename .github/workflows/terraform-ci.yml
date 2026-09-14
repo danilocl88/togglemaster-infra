@@ -1,0 +1,108 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'infra/**'
+      - '.github/workflows/terraform-ci.yml'
+
+  push:
+    branches:
+      - main
+    paths:
+      - 'infra/**'
+      - '.github/workflows/terraform-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+
+  terraform-quality:
+    name: Terraform fmt / validate / IaC scan
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: infra
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.10.5'
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init sem backend
+        run: terraform init -backend=false -input=false
+
+      - name: Terraform validate
+        run: terraform validate -no-color
+
+      - name: Trivy IaC
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          scan-type: config
+          scan-ref: infra
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+
+  terraform-plan:
+    name: Terraform plan - main
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs:
+      - terraform-quality
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: infra
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.10.5'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          allowed-account-ids: ${{ secrets.AWS_ACCOUNT_ID }}
+
+      - name: Init backend e preparar LabRole
+        shell: bash
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity \
+            --query Account \
+            --output text)
+
+          BUCKET="togglemaster-fase3-tfstate-${ACCOUNT_ID}"
+
+          echo "TF_VAR_lab_role_arn=arn:aws:iam::${ACCOUNT_ID}:role/LabRole" \
+            >> "$GITHUB_ENV"
+
+          terraform init \
+            -input=false \
+            -backend-config="bucket=$BUCKET" \
+            -backend-config="key=infra/terraform.tfstate" \
+            -backend-config="region=${{ secrets.AWS_REGION }}" \
+            -backend-config="encrypt=true" \
+            -backend-config="use_lockfile=true"
+
+      - name: Terraform plan
+        run: terraform plan -input=false -no-color
