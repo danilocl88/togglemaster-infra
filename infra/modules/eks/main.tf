@@ -1,3 +1,8 @@
+# AWS Academy / laboratório:
+# - EKS 1.36 ja possui envelope encryption padrao gerenciada pela AWS.
+# - Endpoint publico e mantido porque a Management Host esta em VPC separada.
+# - Em producao utilizar endpoint privado ou CIDRs publicos restritos.
+# trivy:ignore:AVD-AWS-0039 trivy:ignore:AVD-AWS-0040 trivy:ignore:AVD-AWS-0041
 resource "aws_eks_cluster" "this" {
   name     = var.cluster_name
   role_arn = var.lab_role_arn

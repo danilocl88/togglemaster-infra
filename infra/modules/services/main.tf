@@ -23,6 +23,7 @@ resource "aws_sqs_queue" "events" {
   name                       = "togglemaster-events"
   visibility_timeout_seconds = 30
   message_retention_seconds  = 86400
+  sqs_managed_sse_enabled    = true
 }
 
 resource "aws_ecr_repository" "service" {
@@ -35,5 +36,5 @@ resource "aws_ecr_repository" "service" {
     scan_on_push = true
   }
 
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
 }

@@ -26,12 +26,10 @@ resource "aws_security_group" "rds" {
     security_groups = [var.eks_security_group_id]
   }
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+
+  # Deny explicit outbound rules. Security Groups are stateful;
+  # response traffic for permitted inbound connections remains allowed.
+  egress = []
 }
 
 resource "aws_db_subnet_group" "this" {
@@ -79,12 +77,10 @@ resource "aws_security_group" "redis" {
     security_groups = [var.eks_security_group_id]
   }
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+
+  # Deny explicit outbound rules. Security Groups are stateful;
+  # response traffic for permitted inbound connections remains allowed.
+  egress = []
 }
 
 resource "aws_elasticache_subnet_group" "this" {

@@ -11,6 +11,10 @@ resource "aws_internet_gateway" "this" {
   tags   = { Name = "${var.project_name}-igw" }
 }
 
+# AWS Academy / laboratório:
+# Workers EKS usam subnets publicas para evitar NAT Gateway e custo adicional.
+# Em producao utilizar workers privados com NAT/VPC Endpoints.
+# trivy:ignore:AVD-AWS-0164
 resource "aws_subnet" "public" {
   count                   = length(var.public_subnet_cidrs)
   vpc_id                  = aws_vpc.this.id

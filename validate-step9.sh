@@ -440,10 +440,10 @@ else
     fail "scan_on_push=true ausente"
 fi
 
-if contains 'image_tag_mutability[[:space:]]*=[[:space:]]*"MUTABLE"' "$SERVICES/main.tf"; then
-    pass "image_tag_mutability=MUTABLE conforme projeto"
+if contains 'image_tag_mutability[[:space:]]*=[[:space:]]*"IMMUTABLE"' "$SERVICES/main.tf"; then
+    pass "image_tag_mutability=IMIMMUTABLE conforme hardening"
 else
-    fail "image_tag_mutability=MUTABLE ausente"
+    fail "image_tag_mutability=IMMUTABLE ausente"
 fi
 
 
